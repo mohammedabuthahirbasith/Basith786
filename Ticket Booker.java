@@ -1,167 +1,151 @@
 import java.util.*;
-public class TicketBooker
+class TicketBook
 {
-    //63 berths(upper ,lower , middle)  + ( 18 RAC passengers) 
-    //10 waiting list tickets ->21 L, 21 M, 21U , 18RAC, 10WL
-    static int availableLowerBerths = 1;//normally 21
-    static int availableMiddleBerths = 1;//normally 21
-    static int availableUpperBerths = 1;//normally 21
-    static int availableRacTickets = 1;//normally 18
-    static int availableWaitingList = 1;//normally 10
+static int aLB = 2; //available lower berth
+static int aMB = 1;
+static int aUB = 1;
+static int aRAC = 1;
+static int aWL = 1;
 
-    static Queue<Integer> waitingList = new LinkedList<>();//queue of WL passengers
-    static Queue<Integer> racList =  new LinkedList<>();//queu of RAC passengers
-    static List<Integer> bookedTicketList =  new ArrayList<>();//list of bookedticket passengers
+static List<Integer> lBP = new ArrayList<Integer>(Arrays.asList(1, 2));
+static List<Integer> mBP = new ArrayList<Integer>(Arrays.asList(1));
+static List<Integer> uBP = new ArrayList<Integer>(Arrays.asList(1));
+static List<Integer> racP = new ArrayList<Integer>(Arrays.asList(1));
+static List<Integer> wlP = new ArrayList<Integer>(Arrays.asList(1));
 
-    static List<Integer> lowerBerthsPositions = new ArrayList<>(Arrays.asList(1));//normally 1,2,...21
-    static List<Integer> middleBerthsPositions = new ArrayList<>(Arrays.asList(1));//normally 1,2,...21
-    static List<Integer> upperBerthsPositions = new ArrayList<>(Arrays.asList(1));//normally 1,2,...21
-    static List<Integer> racPositions = new ArrayList<>(Arrays.asList(1));//normally 1,2,...18
-    static List<Integer> waitingListPositions = new ArrayList<>(Arrays.asList(1));//normally 1,2,...10
+static Queue<Integer> wlList = new LinkedList<Integer>();
+static Queue<Integer> racList = new LinkedList<Integer>();
+static List<Integer> bookedTicketList = new ArrayList<Integer>();
+static Map<Integer, Passenger> passenger_stored_data = new HashMap<Integer, Passenger>();
 
-    static Map<Integer, Passenger> passengers = new HashMap<>();//map of passenger ids to passengers
+public void bookTicket(Passenger p, int snumber, String allotedBerth)
+{
+p.number = snumber;
+p.alloted = allotedBerth;
+passenger_stored_data.put(p.passengerId, p);
+bookedTicketList.add(p.passengerId);
+System.out.println("Passenger ID:" + p.passengerId);
+System.out.println("Passenger Name:" + p.name);
+System.out.println("Passenger Age:" + p.age);
+System.out.println("Passenger Gender:" + p.gender);
+System.out.println("Alloted Berth:" + snumber+allotedBerth);
+System.out.println("--------------------------Booked Successfully");
+}
+public void racTicket(Passenger p, int snumber, String RACBerth)
+{
+p.number = snumber;
+p.alloted = RACBerth;
+passenger_stored_data.put(p.passengerId, p);
+racList.add(p.passengerId);
+System.out.println("Passenger ID:" + p.passengerId);
+System.out.println("Passenger Name:" + p.name);
+System.out.println("Passenger Age:" + p.age);
+System.out.println("Passenger Gender:" + p.gender);
+System.out.println("Alloted Berth:" + snumber+RACBerth);
+System.out.println("--------------------------RAC Berth Given");
+}
+public void wlTicket(Passenger p, int snumber, String WLBerth)
+{
+p.number = snumber;
+p.alloted = WLBerth;
+passenger_stored_data.put(p.passengerId, p);
+wlList.add(p.passengerId);
+System.out.println("Passenger ID:" + p.passengerId);
+System.out.println("Passenger Name:" + p.name);
+System.out.println("Passenger Age:" + p.age);
+System.out.println("Passenger Gender:" + p.gender);
+System.out.println("Alloted Berth:" + snumber+WLBerth);
+System.out.println("--------------------------You're in Waiting List");
+}
+//==================================================================================
+public void cancelTicket(int passengerId)
+{
 
-    //book ticket
-    public void bookTicket(Passenger p, int berthInfo,String allotedBerth)
-    {
-        //assign the seat number and type of berth(L,U,M)
-        p.number = berthInfo;
-        p.alloted = allotedBerth;
-        // add passenger to the map
-        passengers.put(p.passengerId,p);
-        //add passenger id to the list of booked tickets
-        bookedTicketList.add(p.passengerId);        
-        System.out.println("--------------------------Booked Successfully");
-    }
+Passenger p = passenger_stored_data.get(passengerId);
+passenger_stored_data.remove(passengerId);
+bookedTicketList.remove(passengerId);
+int psnumber = p.number;
+System.out.println("-------------------Cancelled Successfully");
+if(p.alloted.equals("L"))
+{
+lBP.add(psnumber);
+aLB++;
+}
+else if(p.alloted.equals("M"))
+{
+mBP.add(psnumber);
+aMB++;
+}
+else if(p.alloted.equals("U"))
+{
+uBP.add(psnumber);
+aUB++;
+}
+if(racList.size() > 0)
+{
+Passenger passengerFromRAC=passenger_stored_data.get(racList.poll());
+int pracsnumber=passengerFromRAC.number;
+racP.add(pracsnumber);
+racList.remove(passengerFromRAC.passengerId);
+aRAC++;
 
-    //adding to RAC
-    public void addToRAC(Passenger p,int racInfo,String allotedRAC)
-    {
-        //assign seat number and type(RAC)
-        p.number = racInfo;
-        p.alloted = allotedRAC;
-        // add passenger to the map
-        passengers.put(p.passengerId,p);
-        //add passenger id to the queue of RAC tickets
-        racList.add(p.passengerId);
-        //decrease available RAC tickets by 1    
-        availableRacTickets--;
-        //remove the position that was alloted to the passenger
-        racPositions.remove(0);
+if(wlList.size() > 0)
+{
+Passenger pfwl=passenger_stored_data.get(wlList.poll());
+int pwlnumber=pfwl.number;
+wlP.add(pwlnumber);
+wlList.remove(pfwl.passengerId);
+   
+pfwl.number=racP.get(0);
+pfwl.alloted="RAC";
+racP.remove(0);
+racList.add(pfwl.passengerId);
+aWL++;
+aRAC--;
+}
+Main.bookTicket(passengerFromRAC);
+}
+}
 
-        System.out.println("--------------------------added to RAC Successfully");
-    }
 
-    //adding to WL
-    public void addToWaitingList(Passenger p,int waitingListInfo,String allotedWL)
-    {
-        //assign seat number and type(WL)
-        p.number = waitingListInfo; 
-        p.alloted = allotedWL;
-        // add passenger to the map
-        passengers.put(p.passengerId,p);
-        //add passenger id to the queue of WL tickets
-        waitingList.add(p.passengerId);
-        //decrease available WL tickets by 1    
-        availableWaitingList--;
-        //remove the position that was alloted to the passenger
-        waitingListPositions.remove(0);
+//=====================================================================
+public void availableTickets()
+{
+System.out.println("The Lower Berths Ticket is:" + aLB);
+System.out.println("The Middle Berths Ticket is:" + aMB);
+System.out.println("The Upper Berths Ticket is:" + aUB);
+System.out.println("The RAC Ticket is:" + aRAC);
+System.out.println("The Waiting List Ticket is:" + aWL);
+}
 
-        System.out.println("-------------------------- added to Waiting List Successfully");
-    }
 
-    //cancel ticket
-    public void cancelTicket(int passengerId)
-    {
-        //remove the passenger from the map
-        Passenger p = passengers.get(passengerId);
-        passengers.remove(Integer.valueOf(passengerId));
-        //remove the booked ticket from the list
-        bookedTicketList.remove(Integer.valueOf(passengerId));
 
-        //take the booked position which is now free
-        int positionBooked = p.number;
+//===================================================================================
+public void passengersDetail()
+{
+if(passenger_stored_data.size() == 0)
+{
+System.out.println("No Passengers Detail Found");
+return;
+}
+else
+{
+for(Passenger p : passenger_stored_data.values())
+{
+System.out.println("Passenger Id:" + p.passengerId);
+System.out.println("Passenger Name:" + p.name);
+System.out.println("Passenger Age:" + p.age);
+System.out.println("Passenger Gender:" + p.gender);
+System.out.println("Passenger Child Name:" + p.cname);
+System.out.println("passenger Child Age:" + p.cage);
+System.out.println("Alloted Berth:" + p.number+p.alloted);
 
-        System.out.println("---------------cancelled Successfully");
+System.out.println("=========================================");
+}
+}
+}
 
-        //add the free position to the correspoding type of list (either L,M,U)
-        if(p.alloted.equals("L")) 
-        { 
-          availableLowerBerths++;
-          lowerBerthsPositions.add(positionBooked);
-        }
-        else if(p.alloted.equals("M"))
-        { 
-          availableMiddleBerths++;
-          middleBerthsPositions.add(positionBooked);
-        }
-        else if(p.alloted.equals("U"))
-        { 
-          availableUpperBerths++;
-          upperBerthsPositions.add(positionBooked);
-        }
 
-        //check if any RAC is there
-        if(racList.size() > 0)
-        {
-            //take passenger from RAC and increase the free space in RAC list and increase available RAC tickets
-            Passenger passengerFromRAC = passengers.get(racList.poll());
-            int positionRac = passengerFromRAC.number;
-            racPositions.add(positionRac);
-            racList.remove(Integer.valueOf(passengerFromRAC.passengerId));
-            availableRacTickets++;
 
-            //check if any WL is there
-            if(waitingList.size()>0)
-            {
-                //take the passenger from WL and add them to RAC , increase the free space in waiting list and 
-                //increase available WL and decrease available RAC by 1
-                Passenger passengerFromWaitingList = passengers.get(waitingList.poll());
-                int positionWL = passengerFromWaitingList.number;
-                waitingListPositions.add(positionWL);
-                waitingList.remove(Integer.valueOf(passengerFromWaitingList.passengerId));
 
-                passengerFromWaitingList.number = racPositions.get(0);
-                passengerFromWaitingList.alloted = "RAC";
-                racPositions.remove(0);
-                racList.add(passengerFromWaitingList.passengerId);
-                
-                availableWaitingList++;
-                availableRacTickets--;
-            }
-            // now we have a passenger from RAc to whom we can book a ticket, 
-            //so book the cancelled ticket to the RAC passenger
-            Main.bookTicket(passengerFromRAC);
-        }
-    
-    }
-
-    //print all available seats
-    public void printAvailable()
-    {
-        System.out.println("Available Lower Berths "  + availableLowerBerths);
-        System.out.println("Available Middle Berths "  + availableMiddleBerths);
-        System.out.println("Available Upper Berths "  + availableUpperBerths);
-        System.out.println("Availabel RACs " + availableRacTickets);
-        System.out.println("Available Waiting List " + availableWaitingList);
-        System.out.println("--------------------------");
-    }
-
-    //print all occupied passengers from all types including WL
-    public void printPassengers()
-    {
-        if(passengers.size() == 0)
-        {
-            System.out.println("No details of passengers");
-            return;
-        }
-        for(Passenger p : passengers.values())
-        {
-            System.out.println("PASSENGER ID " + p.passengerId );
-            System.out.println(" Name " + p.name );
-            System.out.println(" Age " + p.age );
-            System.out.println(" Status " + p.number + p.alloted);
-            System.out.println("--------------------------");
-        }
-    }
 }
